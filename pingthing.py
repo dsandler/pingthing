@@ -5,7 +5,11 @@ import re
 import os
 import sys
 import time
-from colors import *
+try:
+    from colors import color
+except:
+    color = lambda s, **kwargs: s
+
 from subprocess import Popen, PIPE
 
 def ping(host):
