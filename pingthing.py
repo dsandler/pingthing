@@ -11,10 +11,13 @@ try:
 except:
     color = lambda s, **kwargs: s
 
+DEFAULT_PACKETSIZE=64-8
+
 from subprocess import Popen, PIPE
 
-def ping(host, timeout=1):
-    command = ['ping', '-c', '1']
+def ping(host, timeout=1, packetsize=DEFAULT_PACKETSIZE):
+    command = ['ping', '-c', '1',
+      '-s', str(DEFAULT_PACKETSIZE)]
     if os.uname().sysname == 'Darwin':
         command += ['-t', str(timeout)]
     else:
@@ -58,6 +61,9 @@ if __name__ == '__main__':
     parser.add_argument('--output', '-o',
         default='log.txt', required=False, metavar='file.txt',
         help='file to append all ping times to')
+    parser.add_argument('--packetsize', '-s',
+        default=DEFAULT_PACKETSIZE, required=False, metavar='bytes',
+        help='ICMP data bytes (+8 header)')
     parser.add_argument('host', nargs=1,
         help='hostname or ip to ping')
 
