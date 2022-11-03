@@ -5,20 +5,23 @@ import re
 import os
 import sys
 import time
+import argparse
 try:
     from colors import color
 except:
     color = lambda s, **kwargs: s
 
+DEFAULT_PACKETSIZE=64-8
+
 from subprocess import Popen, PIPE
 
-def ping(host):
-
-    command = ['ping', '-c', '1']
+def ping(host, timeout=1, packetsize=DEFAULT_PACKETSIZE):
+    command = ['ping', '-c', '1',
+      '-s', str(DEFAULT_PACKETSIZE)]
     if os.uname().sysname == 'Darwin':
-        command += ['-t', '1']
+        command += ['-t', str(timeout)]
     else:
-        command += ['-w', '1']
+        command += ['-w', str(timeout)]
     command += [host]
 
     process = Popen(command, stdout=PIPE, stderr=PIPE)
@@ -51,14 +54,24 @@ def makebar(x):
     return bar
 
 if __name__ == '__main__':
-    args = sys.argv[1:]
-    if len(args) == 0 or args[0] in ('-h', '--help'):
-        print("usage: %s <host>" % sys.argv[0])
-        sys.exit(1)
-    host = args[0]
-    logfile = open('log.txt', 'a')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--timeout', '-t',
+        type=int, default=1, required=False, metavar='seconds',
+        help='an integer for the accumulator')
+    parser.add_argument('--output', '-o',
+        default='log.txt', required=False, metavar='file.txt',
+        help='file to append all ping times to')
+    parser.add_argument('--packetsize', '-s',
+        default=DEFAULT_PACKETSIZE, required=False, metavar='bytes',
+        help='ICMP data bytes (+8 header)')
+    parser.add_argument('host', nargs=1,
+        help='hostname or ip to ping')
+
+    args = parser.parse_args()
+
+    logfile = open(args.output, 'a')
     while True:
-        ms = ping(host)
+        ms = ping(args.host[0])
         bar = "%6.1f %s" % (ms, makebar(ms / 5))
 
         if ms < 0 or ms > 200:
@@ -72,5 +85,5 @@ if __name__ == '__main__':
             ms))
         logfile.flush()
         time.sleep(1)
-            
-        
+
+#vim: sw=4 ts=4 et sts=4:
